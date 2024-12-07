@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"prueba/internal/db"
-	"prueba/internal/handlers"
+	"github.com/carrietatapia/digestivediary/internal/db"
+	"github.com/carrietatapia/digestivediary/internal/handlers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

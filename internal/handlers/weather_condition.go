@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"prueba/internal/db"
-	"prueba/internal/models"
+	"github.com/carrietatapia/digestivediary/internal/db"
+	"github.com/carrietatapia/digestivediary/internal/models"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
