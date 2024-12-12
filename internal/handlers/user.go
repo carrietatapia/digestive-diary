@@ -5,17 +5,22 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/carrietatapia/digestivediary/internal/db"
-	"github.com/carrietatapia/digestivediary/internal/models"
+	"github.com/carrietatapia/digestivediary/internal/domain/models"
+	"github.com/carrietatapia/digestivediary/internal/service/interfaces"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	chi "github.com/go-chi/chi/v5"
 )
 
-// Example for creating and getting users
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+type UserHandler struct {
+	UserService interfaces.UserService
+}
+
+func NewUserHandler(userService interfaces.UserService) *UserHandler {
+	return &UserHandler{UserService: userService}
+}
+
+func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -23,20 +28,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `
-        INSERT INTO users (id, email, password_hash, created_at)
-        VALUES ($1, $2, $3, $4) RETURNING id;
-    `
-	id := uuid.New()
-	now := time.Now()
-	err = db.DB.QueryRow(
-		context.Background(),
-		query,
-		id,
-		user.Email,
-		user.PasswordHash,
-		now,
-	).Scan(&id)
+	userCreated, err := h.UserService.CreateUser(context.Background(), &user)
 	if err != nil {
 		log.Println("error :", err)
 		http.Error(w, "Error inserting data into database", http.StatusInternalServerError)
@@ -44,10 +36,28 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"id": id.String()})
+	json.NewEncoder(w).Encode(userCreated)
 }
 
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.UserService.GetUser(context.Background(), id)
+	if err != nil {
+		log.Println("error :", err)
+		http.Error(w, "Error getting user from database", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "Missing user ID", http.StatusBadRequest)
@@ -55,19 +65,36 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	query := `SELECT id, email, password_hash, created_at FROM users WHERE id=$1`
-	err := db.DB.QueryRow(context.Background(), query, id).Scan(
-		&user.ID,
-		&user.Email,
-		&user.PasswordHash,
-		&user.CreatedAt,
-	)
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	userUpdated, err := h.UserService.UpdateUser(context.Background(), id, &user)
 	if err != nil {
 		log.Println("error :", err)
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "Error updating user in database", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(userUpdated)
+}
+
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		return
+	}
+
+	deleted, err := h.UserService.DeleteUser(context.Background(), id)
+	if err != nil {
+		log.Println("error :", err)
+		http.Error(w, "Error deleting user from database", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]bool{"deleted": deleted})
 }

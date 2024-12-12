@@ -3,14 +3,15 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/carrietatapia/digestivediary/internal/db"
-	"github.com/carrietatapia/digestivediary/internal/models"
+	"github.com/carrietatapia/digestivediary/internal/domain/models"
 
-	"github.com/go-chi/chi/v5"
+	chi "github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -51,12 +52,13 @@ func CreateEntityHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	log.Println("entity id:", id)
+	fmt.Printf("%+v", r)
+
 	if id == "" {
 		http.Error(w, "Missing entity ID", http.StatusBadRequest)
 		return
 	}
-
-	log.Println("entity id:", id)
 
 	var entity models.Entity
 	query := `SELECT id, user_id, name, type, species_id, birth_date, created_at FROM entities WHERE id=$1`
@@ -77,4 +79,5 @@ func GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(entity)
+
 }

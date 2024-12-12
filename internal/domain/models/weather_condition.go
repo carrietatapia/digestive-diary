@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type WeatherCondition struct {
-	ID               uuid.UUID `json:"id"`
+	ID               string    `json:"id"`
 	Timestamp        time.Time `json:"timestamp"`
 	Temperature      float64   `json:"temperature"`
 	WeatherCondition string    `json:"weather_condition"`

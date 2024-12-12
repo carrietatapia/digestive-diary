@@ -2,13 +2,11 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Exercise struct {
-	ID           uuid.UUID `json:"id"`
-	EntityID     uuid.UUID `json:"entity_id"`
+	ID           string    `json:"id"`
+	EntityID     string    `json:"entity_id"`
 	ExerciseType string    `json:"exercise_type"`
 	Duration     int       `json:"duration"`
 	Intensity    string    `json:"intensity"`

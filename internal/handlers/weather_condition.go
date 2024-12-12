@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/carrietatapia/digestivediary/internal/db"
-	"github.com/carrietatapia/digestivediary/internal/models"
+	"github.com/carrietatapia/digestivediary/internal/domain/models"
 
-	"github.com/go-chi/chi/v5"
+	chi "github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
